@@ -17,3 +17,8 @@ npx shadow-cljs browser-repl
 ```bash
 npx shadow-cljs release app
 ```
+
+
+## Dependencies
+
+- [loom](https://github.com/aysylu/loom) - Graphs data structures

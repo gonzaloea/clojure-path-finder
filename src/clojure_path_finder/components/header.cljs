@@ -1,4 +1,6 @@
 (ns clojure-path-finder.components.header)
 
 (defn header-component []
-  [:h2 "header works!"])
+  [:div.header 
+   [:h1.title "Clojure Path Finder"]
+   ])
