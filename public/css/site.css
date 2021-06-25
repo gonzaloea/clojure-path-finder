@@ -42,3 +42,7 @@ a:hover {
     align-items: center;
     padding-left: 20px;
 }
+
+.map {
+    display: grid;
+}
