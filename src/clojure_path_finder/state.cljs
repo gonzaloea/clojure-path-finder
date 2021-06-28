@@ -10,3 +10,12 @@
                     {:id 7 :x 3 :y 2 :adjacents [3 5 8]}
                     {:id 8 :x 4 :y 2 :adjacents [4 7]}]))
 
+;; TODO: Enacapsular el nodo {x:... y:...}
+(def newstate (r/atom {{:x 1 :y 1} [{:x 2 :y 1} {:x 1 :y 2}]
+                       {:x 2 :y 1} [{:x 2 :y 1} {:x 3 :y 1} {:x 2 :y 2}]
+                       {:x 3 :y 1} [{:x 2 :y 1} {:x 4 :y 1} {:x 3 :y 2}]
+                       {:x 4 :y 1} [{:x 3 :y 1} {:x 4 :y 2}]
+                       {:x 1 :y 2} [{:x 2 :y 1} {:x 2 :y 2}]
+                       {:x 2 :y 2} [{:x 1 :y 2} {:x 2 :y 1} {:x 3 :y 2}]
+                       {:x 3 :y 2} [{:x 3 :y 1} {:x 1 :y 2} {:x 4 :y 2}]
+                       {:x 4 :y 2} [{:x 4 :y 1} {:x 3 :y 2}]}))
