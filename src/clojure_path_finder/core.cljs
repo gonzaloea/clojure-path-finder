@@ -29,7 +29,7 @@
   (js/smooth))
 
 (def graph-view
-  (atom {:model s/table-graph  :size 30 :scale 0.5}))
+  (atom {:model s/table-graph  :size 30 :scale 1}))
 
 
 (defn graph-view-get-vertices []
@@ -51,11 +51,10 @@
           size (* (:size @graph-view) (:scale @graph-view))]
       ;;Si el puntero esta en el casillero, muestro el borde grueso, sino normal.
       (if (mouse-in-rect? js/mouseX js/mouseY x y (/ size 2))
-        [(js/stroke "#767c79")
-        (js/strokeWeight 3)]
+        (js/strokeWeight 3)
         (js/strokeWeight 1))
       ;;Si el puntero esta en el casillero y el mouseClick esta activo, pinto el fondo.
-      (if  (not (:visible node))
+      (if  (not (s/has-adjacents (:model @graph-view) node))
         (js/fill "#767c79")
         (js/fill "#ffffff"))
       ;;Dibujo el rectangulo del casillero
@@ -70,6 +69,7 @@
                (* (:y adjacent) (:size @graph-view))))))
 
 (defn draw []
+  (js/stroke "#767c79")
   (js/background "#ffffff")
   (graph-view-draw-edges)
   (graph-view-draw-vertices))
@@ -82,7 +82,12 @@
           size (* (:size @graph-view) (:scale @graph-view))]
       (if (mouse-in-rect? js/mouseX js/mouseY x y (/ size 2))
         [;;(js/console.log (str "Previous: " @graph-view))
-         (swap! graph-view assoc :model (s/set-visibility (:model @graph-view) node (not (:visible node))))
+         ;;(swap! graph-view assoc :model (s/set-visibility (:model @graph-view) node (not (:visible node))))
+         (if (s/has-adjacents (:model @graph-view) node)
+           (swap! graph-view assoc :model (s/hide-vertex (:model @graph-view) node))
+           (swap! graph-view assoc :model (s/unhide-vertex (:model @graph-view) node))
+        )
+         
          ;;(js/console.log (str "Post: "@graph-view))
          ]))))
 
