@@ -1,25 +1,6 @@
 (ns clojure-path-finder.state
   (:require [reagent.core :as r]))
 
-;; (def state (r/atom [{:id 1 :x 1 :y 1 :adjacents [2 5]}
-;;                     {:id 2 :x 2 :y 1 :adjacents [1 3 6]}
-;;                     {:id 3 :x 3 :y 1 :adjacents [2 4 7]}
-;;                     {:id 4 :x 4 :y 1 :adjacents [3 8]}
-;;                     {:id 5 :x 1 :y 2 :adjacents [1 6]}
-;;                     {:id 6 :x 2 :y 2 :adjacents [5 2 7]}
-;;                     {:id 7 :x 3 :y 2 :adjacents [3 5 8]}
-;;                     {:id 8 :x 4 :y 2 :adjacents [4 7]}]))
-
-;; TODO: Enacapsular el nodo {x:... y:...}
-;; (def newstate {{:x 1 :y 1} [{:x 2 :y 1} {:x 1 :y 2}]
-;;                 {:x 2 :y 1} [{:x 2 :y 1} {:x 3 :y 1} {:x 2 :y 2}]
-;;                 {:x 3 :y 1} [{:x 2 :y 1} {:x 4 :y 1} {:x 3 :y 2}]
-;;                 {:x 4 :y 1} [{:x 3 :y 1} {:x 4 :y 2}]
-;;                 {:x 1 :y 2} [{:x 2 :y 1} {:x 2 :y 2}]
-;;                 {:x 2 :y 2} [{:x 1 :y 2} {:x 2 :y 1} {:x 3 :y 2}]
-;;                 {:x 3 :y 2} [{:x 3 :y 1} {:x 1 :y 2} {:x 4 :y 2}]
-;;                 {:x 4 :y 2} [{:x 4 :y 1} {:x 3 :y 2}]})
-
 (defrecord Graph [data])
 
 (defn create-graph
@@ -32,7 +13,7 @@
     (create-graph (assoc (:data self) vertex []))))
 
 (defn get-adjacents [self vertex]
-  (vertex (:data self)))
+  (get (:data self) vertex []))
 
 
 (defn add-adjacent [self vertex adjacent]
@@ -60,34 +41,51 @@
   (reduce add-vertex
           (create-graph)
           (into []
-                (for [i (range 1 30) j (range 1 20)]
-                  (new-vertex i j true)))))
+                (for [x (range 1 41) y (range 1 21)]
+                  (new-vertex x y true)))))
 
 
 
 (def edges
-  [[{:x 1 :y 1} {:x 2 :y 1}]
-   [{:x 1 :y 1} {:x 1 :y 2}]
-   [{:x 2 :y 1} {:x 1 :y 2}]
-   [{:x 2 :y 1} {:x 3 :y 1}]
-   [{:x 2 :y 1} {:x 2 :y 2}]
-   [{:x 3 :y 1} {:x 4 :y 1}]
-   [{:x 3 :y 1} {:x 3 :y 2}]
-   [{:x 4 :y 1} {:x 4 :y 2}]
-   [{:x 1 :y 2} {:x 2 :y 2}]
-   [{:x 2 :y 2} {:x 3 :y 2}]
-   [{:x 3 :y 2} {:x 4 :y 2}]])
+  [[{:x 1 :y 1 :visible true} {:x 2 :y 1 :visible true}]
+   [{:x 1 :y 1 :visible true} {:x 1 :y 2 :visible true}]
+   [{:x 2 :y 1 :visible true} {:x 1 :y 2 :visible true}]
+   [{:x 2 :y 1 :visible true} {:x 3 :y 1 :visible true}]
+   [{:x 2 :y 1 :visible true} {:x 2 :y 2 :visible true}]
+   [{:x 3 :y 1 :visible true} {:x 4 :y 1 :visible true}]
+   [{:x 3 :y 1 :visible true} {:x 3 :y 2 :visible true}]
+   [{:x 4 :y 1 :visible true} {:x 4 :y 2 :visible true}]
+   [{:x 1 :y 2 :visible true} {:x 2 :y 2 :visible true}]
+   [{:x 2 :y 2 :visible true} {:x 3 :y 2 :visible true}]
+   [{:x 3 :y 2 :visible true} {:x 4 :y 2 :visible true}]])
 
-(def graph (reduce (fn [g [u v]] (add-edge g u v))
-                   edgeless-graph edges))
+ (def graph (reduce (fn [g [u v]] (add-edge g u v))
+                    edgeless-graph edges))
+
+(defn table-edges [self vertex]
+  (let [x (:x vertex)
+        y (:y vertex)
+        left-vertex (new-vertex (- x 1) y)
+        right-vertex (new-vertex (+ x 1) y)
+        top-vertex (new-vertex x (+ y 1))
+        bottom-vertex (new-vertex x (- y 1))]
+    (reduce (fn [g [u v]] (add-edge g u v)) self (filter
+                               (fn [[u v]] (contains? (:data self) v))
+                               [[vertex left-vertex]
+                                [vertex right-vertex]
+                                [vertex top-vertex]
+                                [vertex bottom-vertex]]))))
 
 
 
+
+(def table-graph
+  (reduce table-edges edgeless-graph (keys (:data edgeless-graph))))
 
 (defn dfs
   ([graph source destination] (dfs graph source destination #{} {}))
   ([graph source destination visited path]
-
+ 
    (let [new-visited (conj visited source)]
      (if (or (= source destination) (contains? visited source))
        new-visited
