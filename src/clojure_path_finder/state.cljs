@@ -7,10 +7,13 @@
   ([] (Graph. {}))
   ([data] (Graph. data)))
 
+(defn node-compare [n1 n2] 
+  (< (:x n1) (:x n2)))
+
 (defn add-vertex [self vertex]
   (if (contains? (:data self) vertex)
     self
-    (create-graph (assoc (:data self) vertex #{}))))
+    (create-graph (assoc (:data self) vertex (sorted-set-by node-compare )))))
 
 (defn get-adjacents [self vertex]
   (get (:data self) vertex))
@@ -35,7 +38,7 @@
 
 (defn hide-vertex [self vertex]
   (let [adjacents (get-adjacents self vertex)
-        new-data (assoc (dissoc (:data self) vertex) vertex #{})]
+        new-data (assoc (dissoc (:data self) vertex) vertex (sorted-set-by node-compare))]
     (create-graph (reduce (fn [g a] (let [new-adjacents (set (filter (fn [b]
                                                                        (not= b vertex))
                                                                      (get g a #{})))]
@@ -72,10 +75,11 @@
         bottom-vertex (new-vertex x (- y 1))]
     (reduce (fn [g [u v]] (add-edge g u v)) self (filter
                                                   (fn [[u v]] (and (contains? (:data self) v) (has-adjacents self v)))
-                                                  [[vertex left-vertex]
-                                                   [vertex right-vertex]
+                                                  [[vertex right-vertex]
+                                                   [vertex bottom-vertex]
+                                                   [vertex left-vertex]
                                                    [vertex top-vertex]
-                                                   [vertex bottom-vertex]]))))
+                                                   ]))))
 
 (defn unhide-vertex [self vertex]
   (table-edges-avoid-empty self vertex))
@@ -84,7 +88,7 @@
   (reduce add-vertex
           (create-graph)
           (into []
-                (for [x (range 1 21) y (range 1 21)]
+                (for [x (range 1 60) y (range 1 30)]
                   (new-vertex x y)))))
 
 
@@ -110,16 +114,27 @@
 (def table-graph
   (reduce table-edges edgeless-graph (keys (:data edgeless-graph))))
 
-(defn dfs
-  ([graph source destination] (dfs graph source destination #{} {}))
-  ([graph source destination visited path]
+;; (defn dfs
+;;   ([graph source destination] (dfs graph source destination #{} ))
+;;   ([graph source destination visited]
 
-   (let [new-visited (conj visited source)]
-     (if (or (= source destination) (contains? visited source))
-       new-visited
-       (reduce (fn  [adjacents v]
-                 (js/console.log (str adjacents))
-                 (dfs graph v destination adjacents (assoc path v source))) new-visited (get-adjacents graph source))))))
+;;    (let [new-visited (conj visited source)]
+;;     (js/console.log "visited: " (str visited))
+;;      (if (or (= source destination) (contains? visited source))
+;;        (if (= source destination) 
+;;          (conj new-visited destination)
+;;          new-visited )
+;;        (reduce (fn  [adjacents v]
+;;                  (dfs graph v destination new-visited)) new-visited (get-adjacents graph source))))))
 
 
-
+(defn dfs [g s d]
+  (loop [vertices [] explored #{s} frontier [s]]
+    (if (or (empty? frontier) (= (last explored) d)) 
+      explored
+      (let [v (peek frontier)
+            neighbors (get-adjacents g v)]
+        (recur
+         (conj vertices v)
+         (into explored neighbors)
+         (into (pop frontier) (remove explored neighbors)))))))

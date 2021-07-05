@@ -3,12 +3,18 @@ body {
     -webkit-font-smoothing: antialiased;
     color: #333;
     margin: 0;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none; 
+     -khtml-user-select: none;
+       -moz-user-select: none; 
+        -ms-user-select: none; 
+            user-select: none; 
 }
 
 h1,
 h2,
 h3 {
-    color: #000;
+    color: #ffffff;
 }
 
 h1 {
@@ -36,12 +42,55 @@ a:hover {
 .header {
     width: 100%;
     height: 70px;
-    background-color: #44a97f;
+    background-color: #348563;
     box-shadow: 0px 0px 8px rgba(0, 0, 0, .6);
     display: flex;
     align-items: center;
     padding-left: 20px;
 }
+
+.start {
+    margin-left: 20px;
+    background-color: #005739;
+    color: #ffffff;
+    border-radius: 5px;
+    border: none;
+    padding: 5px 18px 5px 15px;
+
+}
+
+.start:hover {
+    background-color: #65b491;
+    box-shadow: 0 0px 15px 0 rgba(0,0,0,0.24), 0 5px 50px 0 rgba(0,0,0,0.19);
+}
+
+.command-explanation{
+    display:flex;
+    margin-left: 50px;
+    border-radius:6px;
+}
+
+.command {
+    padding: 5px;
+    color: #fff;
+    background-color: #000;
+    font-family: monospace;
+    font-weight: 100;
+    white-space: nowrap;
+    font-size:11px;
+    border-top-left-radius:5px;
+    border-bottom-left-radius:5px;
+}
+
+.explanation {
+    padding: 5px;
+    background-color: #ffffff; 
+    white-space: nowrap;
+    border-top-right-radius:5px;
+    font-size:11px;
+    border-bottom-right-radius:5px;   
+}
+
 
 .map {
     display: grid;
