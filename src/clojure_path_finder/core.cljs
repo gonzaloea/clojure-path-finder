@@ -9,7 +9,6 @@
 ;; Views
 
 
-
 ;; Drawing library
 
 (defn setup []
@@ -17,12 +16,7 @@
   (js/smooth))
 
 (def graph-view
-  (atom {:model s/table-graph :source (s/new-vertex 1 1) :destination (s/new-vertex 2 3) :path-queue [] :path [] :size 20 :scale 0.6 :path-update-interval 0.1}))
-
-(def iteration-count (atom 0))
-
-(defn increment-iteration-count [] 
-  (swap! iteration-count inc))
+  (atom {:model s/table-graph :source (s/new-vertex 1 1) :destination (s/new-vertex 2 3) :path-queue [] :path [] :size 20 :scale 0.6 }))
 
 (defn graph-view-get-vertices []
   (keys (:data (:model @graph-view))))
@@ -36,19 +30,14 @@
     (< d2 (* r r))))
 
 
+(js/window.setInterval (fn [] (let [first (first (:path-queue @graph-view))
+                                    new-path-queue (drop 1 (:path-queue @graph-view))
+                                    new-path (conj (:path @graph-view) first)]
+                                (swap! graph-view assoc :path-queue new-path-queue)
+                                (swap! graph-view assoc :path new-path))) 50)
+
+
 (defn graph-view-draw-vertices []
-  (increment-iteration-count)
-  (if ( = @iteration-count (* (:path-update-interval @graph-view) 60)) 
-    (let [first (first (:path-queue @graph-view))
-          new-path-queue (drop 1 (:path-queue @graph-view))
-          new-path (conj (:path @graph-view) first)
-          
-      ]
-      (swap! graph-view assoc :path-queue new-path-queue)
-      (swap! graph-view assoc :path new-path)
-      (reset! iteration-count 0)
-     )
-    ())
 
   (doseq [node (graph-view-get-vertices)]
     (let [x (* (:x node) (:size @graph-view))
@@ -112,8 +101,7 @@
           ctrl-pressed? (= 17 (when (js/keyIsDown 17) js/keyCode))]
 
       (if (mouse-in-rect? js/mouseX js/mouseY x y (/ size 2))
-        [;;(js/console.log (str "Previous: " @graph-view))
-         ;;(swap! graph-view assoc :model (s/set-visibility (:model @graph-view) node (not (:visible node))))
+        [
          (if (and (not is-start) (not is-end) (not shift-pressed?) (not ctrl-pressed?))
            (if has-adjacents
              (swap! graph-view assoc :model (s/hide-vertex (:model @graph-view) node))
@@ -129,7 +117,7 @@
 
 
 (defn start-button-action []
-  (let [path-dfs (s/dfs (:model @graph-view) (:source @graph-view) (:destination @graph-view))]
+  (let [path-dfs (s/bfs (:model @graph-view) (:source @graph-view) (:destination @graph-view))]
     (js/console.log (str "camino dfs: " path-dfs))
     (swap! graph-view assoc :path-queue path-dfs)))
 
@@ -149,6 +137,8 @@
 (set! (.-mouseClicked js/window) mouse-clicked)
 
 (js/console.log (str @graph-view))
+
+
 
 (defn mount-root []
   (d/render [home-page] (.getElementById js/document "app")))
