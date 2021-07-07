@@ -16,7 +16,7 @@
   (js/smooth))
 
 (def graph-view
-  (atom {:model s/table-graph :source (s/new-vertex 1 1) :destination (s/new-vertex 2 3) :path-queue [] :path [] :size 20 :scale 0.6 }))
+  (atom {:model s/table-graph :source (s/new-vertex 1 1) :destination (s/new-vertex 2 3) :path-queue [] :path {} :visited-queue [] :visited {} :size 20 :scale 1}))
 
 (defn graph-view-get-vertices []
   (keys (:data (:model @graph-view))))
@@ -30,11 +30,23 @@
     (< d2 (* r r))))
 
 
-(js/window.setInterval (fn [] (let [first (first (:path-queue @graph-view))
+(js/window.setInterval (fn [] (let [first_path_node (first (:path-queue @graph-view))
                                     new-path-queue (drop 1 (:path-queue @graph-view))
-                                    new-path (conj (:path @graph-view) first)]
-                                (swap! graph-view assoc :path-queue new-path-queue)
-                                (swap! graph-view assoc :path new-path))) 50)
+                                    new-path (assoc (:path @graph-view) first_path_node true)
+                                    first_visited_node (first (:visited-queue @graph-view))
+                                    new-visited-queue (drop 1 (:visited-queue @graph-view))
+                                    new-visited (assoc (:visited @graph-view) first_visited_node true)]
+
+                                (if (empty? new-visited-queue)
+                                  [(swap! graph-view assoc :path-queue new-path-queue)
+                                   (swap! graph-view assoc :path new-path)]
+                                  [(swap! graph-view assoc :visited-queue new-visited-queue)
+                                   (swap! graph-view assoc :visited new-visited)])))
+                                ;; (swap! graph-view assoc :path-queue new-path-queue)
+                                ;; (swap! graph-view assoc :path new-path)
+                                ;; (swap! graph-view assoc :path-queue new-path-queue)
+                                ;; (swap! graph-view assoc :path new-path))) 
+                       1)
 
 
 (defn graph-view-draw-vertices []
@@ -51,8 +63,11 @@
       (if  (not (s/has-adjacents (:model @graph-view) node))
         (js/fill "#767c79")
         (js/fill "#ffffff"))
-      (if (some  #(= % node) (:path @graph-view))
-        (js/fill "#cfc627")
+      (if (get (:visited @graph-view) node)
+        (js/fill "#57a1e6")
+        ())
+      (if (get (:path @graph-view) node)
+         (js/fill "#cfc627")
         ())
       (if (= (:source @graph-view) node)
         (js/fill "#2163e8")
@@ -101,8 +116,7 @@
           ctrl-pressed? (= 17 (when (js/keyIsDown 17) js/keyCode))]
 
       (if (mouse-in-rect? js/mouseX js/mouseY x y (/ size 2))
-        [
-         (if (and (not is-start) (not is-end) (not shift-pressed?) (not ctrl-pressed?))
+        [(if (and (not is-start) (not is-end) (not shift-pressed?) (not ctrl-pressed?))
            (if has-adjacents
              (swap! graph-view assoc :model (s/hide-vertex (:model @graph-view) node))
              (swap! graph-view assoc :model (s/unhide-vertex (:model @graph-view) node)))
@@ -119,7 +133,8 @@
 (defn start-button-action []
   (let [path-dfs (s/bfs (:model @graph-view) (:source @graph-view) (:destination @graph-view))]
     (js/console.log (str "camino dfs: " path-dfs))
-    (swap! graph-view assoc :path-queue path-dfs)))
+    (swap! graph-view assoc :visited-queue (:visited path-dfs))
+    (swap! graph-view assoc :path-queue (:path path-dfs))))
 
 
 (defn home-page []

@@ -82,7 +82,7 @@
   (reduce add-vertex
           (create-graph)
           (into []
-                (for [x (range 1 7) y (range 1 7)]
+                (for [x (range 1 60) y (range 1 40)]
                   (new-vertex x y)))))
 
 
@@ -129,10 +129,10 @@
       ;; (js/eval "debugger")
 
       (if (or (= (last actual-path) destination) (empty? neighbors))
-        actual-path
+        {:path actual-path :visited visited}
         (recur
          (pop new-paths)
-         (into [] (concat visited [(last actual-path)]))
+         (into [] (if (some #(= % (last actual-path)) visited) visited (concat visited [(last actual-path)])))
          actual-path)))))
 
 (defn dfs
