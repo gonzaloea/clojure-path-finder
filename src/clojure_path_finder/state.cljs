@@ -82,7 +82,7 @@
   (reduce add-vertex
           (create-graph)
           (into []
-                (for [x (range 1 60) y (range 1 40)]
+                (for [x (range 1 20) y (range 1 20)]
                   (new-vertex x y)))))
 
 
@@ -115,20 +115,20 @@
   (loop [paths #queue []
          visited [source]
          s [source]]
-    ;; (js/console.log (str "------------------------------------------------------------------------"))
-    ;; (js/console.log (str "source: " s))
+    ;;(js/console.log (str "------------------------------------------------------------------------"))
+    ;;(js/console.log (str "source: " s))
     ;; (js/console.log (str "looped paths:" paths))
-    ;; (js/console.log (str "visited: " visited))
+    ;;(js/console.log (str "visited: " visited))
     (let [neighbors (into [] (filter (fn [v] (not (some #(= % v) visited))) (get-adjacents graph (last s))))
           new-paths (into #queue [] (concat paths (into #queue [] (concat (map (fn [n] (into [] (conj s n))) neighbors)))))
           actual-path (into [] (peek new-paths))]
-      ;; (js/console.log "neighbors: " (str neighbors))
+      ;;(js/console.log "neighbors: " (str neighbors))
       ;; (js/console.log "new-paths: " (str new-paths))
       ;; (js/console.log "actual-path: " (str actual-path))
-      ;; (js/console.log "last: " (str (last actual-path)))
-      ;; (js/eval "debugger")
+      (js/console.log "last: " (str (last actual-path)))
+       (js/eval "debugger")
 
-      (if (or (= (last actual-path) destination) (empty? neighbors))
+      (if (= (last actual-path) destination)
         {:path actual-path :visited visited}
         (recur
          (pop new-paths)
