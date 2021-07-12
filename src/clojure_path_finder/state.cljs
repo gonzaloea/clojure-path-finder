@@ -143,3 +143,40 @@
      (if (or (= source destination) (some #(= % source) visited))
        [source]
        (concat [source] (dfs graph (first (filter (fn [v] (not (some #(= % v) visited))) (get-adjacents graph source))) destination new-visited))))))
+
+;; -----------algoritmo A*-------------------------------
+
+(defn manhattan-distance [[x1 y1] [x2 y2]]
+  (+ (Math/abs ^Integer (- x2 x1)) (Math/abs ^Integer (- y2 y1))))
+
+(defn costo [curr start end]
+  (let [g (manhattan-distance [(:x start) (:y start)] [(:x curr) (:y curr)])
+        h (manhattan-distance [(:x curr) (:y curr)] [(:x end) (:y end)])
+        f (+ g h)]
+    ;; [f g h]))
+    [f]))
+
+;; no funca, creo que estoy metiendo la pata en reduce porque no calcula el costo
+;; después lo sigo
+(defn a*
+  [graph source destination]
+  ;;  (js/console.log (str "#############"))
+   (js/console.log (str "destination: " destination))
+   (loop [paths #queue []
+          visited [source]
+          s [source]]
+     (let [neighbors (into [] (filter (fn [v] (not (some #(= % v) visited))) (get-adjacents graph (last s))))
+          ;;  nextNode (reduce (fn [x, y] (if (> costo x source destination costo y source destination) y x ) ) neighbors)
+          ;;  new-paths (into #queue [] (concat paths (into #queue [] (concat (reduce (fn [x, y] (if (<= (costo x source destination) cost y source destination x y))) neighbors)))))
+           new-paths (into #queue [] (concat paths (into #queue [] (concat (reduce (fn [x, y] (if (<= costo x source destination costo y source destination) x y)) neighbors)))))
+          ;;  new-paths (into #queue [] (concat paths (into #queue [] (concat (reduce (fn costo [x, y] (if (<= (x source destination) (y source destination)) x y)) neighbors)))))
+           actual-path (into [] (peek new-paths))]
+      ;;  (js/console.log "neighbors: " neighbors)
+       ;; (js/console.log "new-paths: " (str new-paths))
+       (js/console.log (str "actual-path: " actual-path))
+       (if (= (last actual-path) destination)
+         {:path actual-path :visited visited}
+         (recur
+          (pop new-paths)
+          (into [] (if (some #(= % (last actual-path)) visited) visited (concat visited [(last actual-path)])))
+          actual-path)))))
