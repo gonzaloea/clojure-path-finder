@@ -16,7 +16,7 @@
   (js/smooth))
 
 (def graph-view
-  (atom {:model s/table-graph :source (s/new-vertex 1 1) :destination (s/new-vertex 2 3) :path-queue [] :path {} :visited-queue [] :visited {} :size 20 :scale 1}))
+  (atom {:model s/table-graph :source (s/new-vertex 1 1) :destination (s/new-vertex 2 3) :path-queue [] :path {} :visited-queue [] :visited {} :algorithm s/dfs :size 60 :scale 0.8}))
 
 (defn graph-view-get-vertices []
   (keys (:data (:model @graph-view))))
@@ -42,11 +42,20 @@
                                    (swap! graph-view assoc :path new-path)]
                                   [(swap! graph-view assoc :visited-queue new-visited-queue)
                                    (swap! graph-view assoc :visited new-visited)])))
-                                ;; (swap! graph-view assoc :path-queue new-path-queue)
-                                ;; (swap! graph-view assoc :path new-path)
-                                ;; (swap! graph-view assoc :path-queue new-path-queue)
-                                ;; (swap! graph-view assoc :path new-path))) 
-                       1)
+                       50)
+
+
+(defn reset-graph []
+  (swap! graph-view assoc :visited-queue [])
+  (swap! graph-view assoc :path-queue [])
+  (swap! graph-view assoc :path {})
+  (swap! graph-view assoc :visited {}))
+
+(defn hard-reset-graph []
+  (reset-graph)
+  (swap! graph-view assoc :model s/table-graph)
+  (swap! graph-view assoc :source (s/new-vertex 1 1))
+  (swap! graph-view assoc :destination (s/new-vertex 2 3)))
 
 
 (defn graph-view-draw-vertices []
@@ -131,7 +140,8 @@
 
 
 (defn start-button-action []
-  (let [path-dfs (s/bfs (:model @graph-view) (:source @graph-view) (:destination @graph-view))]
+  (reset-graph)
+  (let [path-dfs ((:algorithm @graph-view) (:model @graph-view) (:source @graph-view) (:destination @graph-view))]
     (js/console.log (str "camino dfs: " path-dfs))
     (swap! graph-view assoc :visited-queue (:visited path-dfs))
     (swap! graph-view assoc :path-queue (:path path-dfs))))
@@ -139,7 +149,7 @@
 
 (defn home-page []
   [:div
-   [h/header-component start-button-action]])
+   [h/header-component start-button-action hard-reset-graph graph-view {"DFS" s/dfs "BFS" s/bfs}]])
 
 
 ;; -------------------------

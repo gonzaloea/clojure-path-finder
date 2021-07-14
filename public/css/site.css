@@ -64,6 +64,56 @@ a:hover {
     box-shadow: 0 0px 15px 0 rgba(0,0,0,0.24), 0 5px 50px 0 rgba(0,0,0,0.19);
 }
 
+.reset {
+    margin-left: 20px;
+    background-color: #d85151;
+    color: #ffffff;
+    border-radius: 5px;
+    border: none;
+    padding: 5px 18px 5px 15px;
+
+}
+
+.reset:hover {
+    background-color: #f17a7a;
+    box-shadow: 0 0px 15px 0 rgba(0,0,0,0.24), 0 5px 50px 0 rgba(0,0,0,0.19);
+}
+
+
+.algorithm-selection-container{
+    display:flex;
+    margin-left: 50px;
+    border-radius:6px;
+    font: 400 13.3333px Arial;
+    background-color: #005739;
+    color: #ffffff;
+}
+
+.algorithm-name {
+    padding: 5px;
+    background-color: #005739;
+    color: #ffffff;
+    white-space: nowrap;
+    border-top-left-radius:5px;
+    border-bottom-left-radius:5px;
+}
+
+.algorithm-selection {
+    height: 25px;
+    background-color: #005739;
+    color: #ffffff;
+    border-top-right-radius: 5px;
+    border-bottom-right-radius: 5px;
+    border: none;
+    padding: 5px 18px 5px 18px;
+}
+
+.algorithm-selection:hover{
+    background-color: #65b491;
+    box-shadow: 0 0px 15px 0 rgba(0,0,0,0.24), 0 5px 50px 0 rgba(0,0,0,0.19);
+}
+
+
 .command-explanation{
     display:flex;
     margin-left: 50px;

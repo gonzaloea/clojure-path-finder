@@ -82,32 +82,11 @@
   (reduce add-vertex
           (create-graph)
           (into []
-                (for [x (range 1 20) y (range 1 20)]
+                (for [x (range 1 24) y (range 1 11)]
                   (new-vertex x y)))))
-
-
-
-(def edges
-  [[{:x 1 :y 1} {:x 2 :y 1}]
-   [{:x 1 :y 1} {:x 1 :y 2}]
-   [{:x 2 :y 1} {:x 1 :y 2}]
-   [{:x 2 :y 1} {:x 3 :y 1}]
-   [{:x 2 :y 1} {:x 2 :y 2}]
-   [{:x 3 :y 1} {:x 4 :y 1}]
-   [{:x 3 :y 1} {:x 3 :y 2}]
-   [{:x 4 :y 1} {:x 4 :y 2}]
-   [{:x 1 :y 2} {:x 2 :y 2}]
-   [{:x 2 :y 2} {:x 3 :y 2}]
-   [{:x 3 :y 2} {:x 4 :y 2}]])
-
-(def graph (reduce (fn [g [u v]] (add-edge g u v))
-                   edgeless-graph edges))
-
-
 
 (def table-graph
   (reduce table-edges edgeless-graph (keys (:data edgeless-graph))))
-
 
 
 (defn bfs
@@ -115,18 +94,12 @@
   (loop [paths #queue []
          visited [source]
          s [source]]
-    ;;(js/console.log (str "------------------------------------------------------------------------"))
-    ;;(js/console.log (str "source: " s))
-    ;; (js/console.log (str "looped paths:" paths))
-    ;;(js/console.log (str "visited: " visited))
+
     (let [neighbors (into [] (filter (fn [v] (not (some #(= % v) visited))) (get-adjacents graph (last s))))
           new-paths (into #queue [] (concat paths (into #queue [] (concat (map (fn [n] (into [] (conj s n))) neighbors)))))
           actual-path (into [] (peek new-paths))]
-      ;;(js/console.log "neighbors: " (str neighbors))
-      ;; (js/console.log "new-paths: " (str new-paths))
-      ;; (js/console.log "actual-path: " (str actual-path))
+
       (js/console.log "last: " (str (last actual-path)))
-       (js/eval "debugger")
 
       (if (= (last actual-path) destination)
         {:path actual-path :visited visited}
@@ -136,13 +109,20 @@
          actual-path)))))
 
 (defn dfs
-  ([graph source destination] (dfs graph source destination []))
-  ([graph source destination visited]
+  [graph source destination]
+  (loop [paths []
+         visited [source]
+         s [source]]
+    (let [neighbors (into [] (filter (fn [v] (not (some #(= % v) visited))) (get-adjacents graph (last s))))
+          new-paths (into [] (concat paths (into  [] (concat (map (fn [n] (into [] (conj s n))) neighbors)))))
+          actual-path (into [] (last new-paths))]
+      (if (= (last actual-path) destination)
+        {:path actual-path :visited (into [] (if (some #(= % (last actual-path)) visited) visited (concat visited [(last actual-path)])))}
+        (recur
+         (pop new-paths)
+         (into [] (if (some #(= % (last actual-path)) visited) visited (concat visited [(last actual-path)])))
+         actual-path)))))
 
-   (let [new-visited (conj visited source)]
-     (if (or (= source destination) (some #(= % source) visited))
-       [source]
-       (concat [source] (dfs graph (first (filter (fn [v] (not (some #(= % v) visited))) (get-adjacents graph source))) destination new-visited))))))
 
 ;; -----------algoritmo A*-------------------------------
 
@@ -161,22 +141,22 @@
 (defn a*
   [graph source destination]
   ;;  (js/console.log (str "#############"))
-   (js/console.log (str "destination: " destination))
-   (loop [paths #queue []
-          visited [source]
-          s [source]]
-     (let [neighbors (into [] (filter (fn [v] (not (some #(= % v) visited))) (get-adjacents graph (last s))))
+  (js/console.log (str "destination: " destination))
+  (loop [paths #queue []
+         visited [source]
+         s [source]]
+    (let [neighbors (into [] (filter (fn [v] (not (some #(= % v) visited))) (get-adjacents graph (last s))))
           ;;  nextNode (reduce (fn [x, y] (if (> costo x source destination costo y source destination) y x ) ) neighbors)
           ;;  new-paths (into #queue [] (concat paths (into #queue [] (concat (reduce (fn [x, y] (if (<= (costo x source destination) cost y source destination x y))) neighbors)))))
-           new-paths (into #queue [] (concat paths (into #queue [] (concat (reduce (fn [x, y] (if (<= costo x source destination costo y source destination) x y)) neighbors)))))
+          new-paths (into #queue [] (concat paths (into #queue [] (concat (reduce (fn [x, y] (if (<= costo x source destination costo y source destination) x y)) neighbors)))))
           ;;  new-paths (into #queue [] (concat paths (into #queue [] (concat (reduce (fn costo [x, y] (if (<= (x source destination) (y source destination)) x y)) neighbors)))))
-           actual-path (into [] (peek new-paths))]
+          actual-path (into [] (peek new-paths))]
       ;;  (js/console.log "neighbors: " neighbors)
        ;; (js/console.log "new-paths: " (str new-paths))
-       (js/console.log (str "actual-path: " actual-path))
-       (if (= (last actual-path) destination)
-         {:path actual-path :visited visited}
-         (recur
-          (pop new-paths)
-          (into [] (if (some #(= % (last actual-path)) visited) visited (concat visited [(last actual-path)])))
-          actual-path)))))
+      (js/console.log (str "actual-path: " actual-path))
+      (if (= (last actual-path) destination)
+        {:path actual-path :visited visited}
+        (recur
+         (pop new-paths)
+         (into [] (if (some #(= % (last actual-path)) visited) visited (concat visited [(last actual-path)])))
+         actual-path)))))
