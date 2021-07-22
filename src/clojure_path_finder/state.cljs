@@ -41,7 +41,6 @@
 
 
 
-
 (defn add-edge [self u v]
   (let [one-way-graph (add-adjacent self u v)]
     ;; (add-adjacent one-way-graph v u)))
@@ -91,38 +90,55 @@
 
 (defn bfs
   [graph source destination]
-  (loop [paths #queue []
+  (loop [paths   #queue []
          visited [source]
-         s [source]]
+         s       [source]]
 
-    (let [neighbors (into [] (filter (fn [v] (not (some #(= % v) visited))) (get-adjacents graph (last s))))
-          new-paths (into #queue [] (concat paths (into #queue [] (concat (map (fn [n] (into [] (conj s n))) neighbors)))))
+    (let [neighbors   (into [] (filter (fn [v] (not (some #(= % v) visited)))
+                        (get-adjacents graph (last s))))
+
+          new-paths   (into #queue [] 
+                        (concat paths (into #queue [] (concat (map (fn [n] (into [] (conj s n))) 
+                                                                  neighbors)))))
           actual-path (into [] (peek new-paths))]
 
-      (js/console.log "last: " (str (last actual-path)))
+      (js/console.log "last: " (str actual-path))
 
       (if (= (last actual-path) destination)
         {:path actual-path :visited visited}
         (recur
          (pop new-paths)
-         (into [] (if (some #(= % (last actual-path)) visited) visited (concat visited [(last actual-path)])))
-         actual-path)))))
+         (into [] 
+          (if (some #(= % (last actual-path)) visited) 
+            visited 
+            (concat visited [(last actual-path)]))) actual-path)))))
 
-(defn dfs
-  [graph source destination]
-  (loop [paths []
+
+(defn- abs-dfs
+  [graph source destination shuffle-fn]
+  (loop [paths   []
          visited [source]
-         s [source]]
-    (let [neighbors (into [] (filter (fn [v] (not (some #(= % v) visited))) (get-adjacents graph (last s))))
-          new-paths (into [] (concat paths (into  [] (concat (map (fn [n] (into [] (conj s n))) neighbors)))))
+         s       [source]]
+    (let [neighbors   (into [] (filter (fn [v] (not (some #(= % v) visited))) (get-adjacents graph (last s))))
+          new-paths   (into [] (concat paths (into [] (concat (map (fn [n] (into [] (conj s n))) (shuffle-fn neighbors))))))
           actual-path (into [] (last new-paths))]
       (if (= (last actual-path) destination)
-        {:path actual-path :visited (into [] (if (some #(= % (last actual-path)) visited) visited (concat visited [(last actual-path)])))}
+        {:path    actual-path 
+         :visited (into [] (if (some #(= % (last actual-path)) visited) visited (concat visited [(last actual-path)])))}
         (recur
          (pop new-paths)
          (into [] (if (some #(= % (last actual-path)) visited) visited (concat visited [(last actual-path)])))
          actual-path)))))
 
+
+(defn dfs
+  [graph source destination]
+  (abs-dfs graph source destination identity))
+
+
+(defn shuffle-dfs
+  [graph source destination]
+  (abs-dfs graph source destination shuffle))
 
 ;; -----------algoritmo A*-------------------------------
 

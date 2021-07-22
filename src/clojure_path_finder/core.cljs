@@ -12,11 +12,22 @@
 ;; Drawing library
 
 (defn setup []
-  (js/createCanvas js/windowWidth js/windowHeight)
+  (js/createCanvas (* js/windowWidth 0.9) js/windowHeight)
   (js/smooth))
 
 (def graph-view
-  (atom {:model s/table-graph :source (s/new-vertex 1 1) :destination (s/new-vertex 2 3) :path-queue [] :path {} :visited-queue [] :visited {} :algorithm s/dfs :size 60 :scale 0.8}))
+  (atom {
+    :model s/table-graph 
+    :source (s/new-vertex 1 1) 
+    :destination (s/new-vertex 2 3) 
+    :path-queue [] 
+    :path {} 
+    :visited-queue [] 
+    :visited {} 
+    :algorithm s/dfs 
+    :size 60 
+    :scale 0.8}))
+
 
 (defn graph-view-get-vertices []
   (keys (:data (:model @graph-view))))
@@ -30,19 +41,20 @@
     (< d2 (* r r))))
 
 
-(js/window.setInterval (fn [] (let [first_path_node (first (:path-queue @graph-view))
-                                    new-path-queue (drop 1 (:path-queue @graph-view))
-                                    new-path (assoc (:path @graph-view) first_path_node true)
-                                    first_visited_node (first (:visited-queue @graph-view))
-                                    new-visited-queue (drop 1 (:visited-queue @graph-view))
-                                    new-visited (assoc (:visited @graph-view) first_visited_node true)]
-
-                                (if (empty? new-visited-queue)
-                                  [(swap! graph-view assoc :path-queue new-path-queue)
-                                   (swap! graph-view assoc :path new-path)]
-                                  [(swap! graph-view assoc :visited-queue new-visited-queue)
-                                   (swap! graph-view assoc :visited new-visited)])))
-                       50)
+(js/window.setInterval 
+  (fn [] 
+    (let [first-path-node    (first (:path-queue @graph-view))
+          new-path-queue     (drop 1 (:path-queue @graph-view))
+          new-path           (assoc (:path @graph-view) first-path-node true)
+          first-visited-node (first (:visited-queue @graph-view))
+          new-visited-queue  (drop 1 (:visited-queue @graph-view))
+          new-visited        (assoc (:visited @graph-view) first-visited-node true)]
+      (if (empty? new-visited-queue)
+        [(swap! graph-view assoc :path-queue new-path-queue)
+         (swap! graph-view assoc :path new-path)]
+        [(swap! graph-view assoc :visited-queue new-visited-queue)
+         (swap! graph-view assoc :visited new-visited)])))
+  50)
 
 
 (defn reset-graph []
@@ -59,7 +71,6 @@
 
 
 (defn graph-view-draw-vertices []
-
   (doseq [node (graph-view-get-vertices)]
     (let [x (* (:x node) (:size @graph-view))
           y (* (:y node) (:size @graph-view))
@@ -68,50 +79,64 @@
       (if (mouse-in-rect? js/mouseX js/mouseY x y (/ size 2))
         (js/strokeWeight 2)
         (js/strokeWeight 1))
+
       ;;Si el puntero esta en el casillero y el mouseClick esta activo, pinto el fondo.
       (if  (not (s/has-adjacents (:model @graph-view) node))
         (js/fill "#767c79")
         (js/fill "#ffffff"))
-      (if (get (:visited @graph-view) node)
-        (js/fill "#57a1e6")
-        ())
-      (if (get (:path @graph-view) node)
-         (js/fill "#cfc627")
-        ())
-      (if (= (:source @graph-view) node)
-        (js/fill "#2163e8")
-        ())
 
-      (if (= (:destination @graph-view) node)
-        (js/fill "#f81919")
-        ())
+      (when (get (:visited @graph-view) node)
+        (js/fill "#57a1e6"))
+
+      (when (get (:path @graph-view) node)
+         (js/fill "#cfc627"))
+      
+      (when (= (:source @graph-view) node)
+        (js/fill "#2163e8"))
+
+      (when (= (:destination @graph-view) node)
+        (js/fill "#f81919"))
+      
       ;;Dibujo el rectangulo del casillero
-      (js/rect (- x (/ size 2)) (- y (/ size 2)) size size)
+      (js/rect (- x (/ size 2)) 
+               (- y (/ size 2)) 
+               size 
+               size)
 
-      (if (= (:source @graph-view) node)
+      (when (= (:source @graph-view) node)
         [(js/fill "#000000")
-         (js/text "O" (- x 4.7) (+ y 4))]
-        ())
+         (js/text "O" (- x 4.7) (+ y 4))])
 
-      (if (= (:destination @graph-view) node)
+      (when (= (:destination @graph-view) node)
         [(js/fill "#000000")
-         (js/text "D" (- x 4) (+ y 4))]
-        ()))))
+         (js/text "D" (- x 4) (+ y 4))]))))
 
 (defn graph-view-draw-edges []
-  (doseq [[node adjacents] (:data (:model @graph-view))]
-    (doseq [adjacent adjacents]
-      (js/line (* (:x node) (:size @graph-view))
-               (* (:y node) (:size @graph-view))
-               (* (:x adjacent) (:size @graph-view))
-               (* (:y adjacent) (:size @graph-view))))))
+  (let [graph-model (:data (:model @graph-view))
+        edges (apply concat 
+                (map (fn [[node neighbors]] 
+                      (map 
+                        (fn [neighbor] [node neighbor]) 
+                        neighbors)) 
+                graph-model))
+        unique-edges (into #{} edges)]
+
+      (doseq [[a b] unique-edges]
+        (js/stroke "#000000")
+        (js/strokeWeight 1)
+        (js/line (* (:x a) (:size @graph-view))
+                 (* (:y a) (:size @graph-view))
+                 (* (:x b) (:size @graph-view))
+                 (* (:y b) (:size @graph-view))))))
+
 
 (defn draw []
   (js/stroke "#000000")
   (js/strokeWeight 1)
   (js/background "#ffffff")
   (graph-view-draw-edges)
-  (graph-view-draw-vertices))
+  (graph-view-draw-vertices)
+)
 
 (defn mouse-clicked []
   (doseq [node (graph-view-get-vertices)]
@@ -124,32 +149,37 @@
           shift-pressed? (= 16 (when (js/keyIsDown 16) js/keyCode))
           ctrl-pressed? (= 17 (when (js/keyIsDown 17) js/keyCode))]
 
-      (if (mouse-in-rect? js/mouseX js/mouseY x y (/ size 2))
-        [(if (and (not is-start) (not is-end) (not shift-pressed?) (not ctrl-pressed?))
+      (when (mouse-in-rect? js/mouseX js/mouseY x y (/ size 2))
+        [(when (and (not is-start) (not is-end) (not shift-pressed?) (not ctrl-pressed?))
            (if has-adjacents
              (swap! graph-view assoc :model (s/hide-vertex (:model @graph-view) node))
-             (swap! graph-view assoc :model (s/unhide-vertex (:model @graph-view) node)))
-           ())
-         (if (and has-adjacents shift-pressed? (not is-end))
-           (swap! graph-view assoc :source node)
-           ())
-         (if (and has-adjacents ctrl-pressed? (not is-start))
-           (swap! graph-view assoc :destination node)
-           ())]
-        ()))))
+             (swap! graph-view assoc :model (s/unhide-vertex (:model @graph-view) node))))
+         (when (and has-adjacents shift-pressed? (not is-end))
+           (swap! graph-view assoc :source node))
+         (when (and has-adjacents ctrl-pressed? (not is-start))
+           (swap! graph-view assoc :destination node))]))))
 
 
 (defn start-button-action []
   (reset-graph)
-  (let [path-dfs ((:algorithm @graph-view) (:model @graph-view) (:source @graph-view) (:destination @graph-view))]
-    (js/console.log (str "camino dfs: " path-dfs))
-    (swap! graph-view assoc :visited-queue (:visited path-dfs))
-    (swap! graph-view assoc :path-queue (:path path-dfs))))
+  (let [path-solution ((:algorithm @graph-view) 
+                  (:model @graph-view) 
+                  (:source @graph-view) 
+                  (:destination @graph-view))]
+    ;; (js/console.log (str "camino solution: " path-solution))
+    (swap! graph-view assoc :visited-queue (:visited path-solution))
+    (swap! graph-view assoc :path-queue (:path path-solution))))
 
 
 (defn home-page []
   [:div
-   [h/header-component start-button-action hard-reset-graph graph-view {"DFS" s/dfs "BFS" s/bfs}]])
+   [h/header-component start-button-action 
+                       hard-reset-graph 
+                       graph-view 
+                       {
+                          "DFS" s/dfs 
+                          "BFS" s/bfs 
+                          "Sh-DFS" s/shuffle-dfs}]])
 
 
 ;; -------------------------
@@ -160,8 +190,6 @@
 (set! (.-setup js/window) setup)
 (set! (.-draw js/window) draw)
 (set! (.-mouseClicked js/window) mouse-clicked)
-
-(js/console.log (str @graph-view))
 
 
 
