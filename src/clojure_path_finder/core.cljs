@@ -111,26 +111,18 @@
     (reset! graph-view (json-to-map raw))))
 
 (defn handle-error-file [_]
-  (js/alert "No se pudo cargar el archivo"))
+  (js/alert "No se pudo cargar el archivo") ;; TODO: Se podría hacer algo mejor que un alert
+  )
 
 (def read-file-web-p (partial read-file-web read-loaded-file handle-error-file))
 
 (defn download-map [] 
-  ;; var element = document.createElement('a');
-  ;; element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
-  ;; element.setAttribute('download', filename);
-
-  ;; element.style.display = 'none';
-  ;; document.body.appendChild(element);
-
-  ;; element.click();
-
-  ;; document.body.removeChild(element);
   (let [output (.getElementById js/document "saved-map")]
     (set! (.-innerText output) (str (map-to-json @graph-view)))
     (.select output)
     (.execCommand js/document "copy")
-    (js/alert "Se copió la información del mapa al portapapeles")))
+    (js/alert "Se copió la información del mapa al portapapeles");; TODO: Se podría hacer algo mejor que un alert
+    ))
 
 
 (defn graph-view-draw-vertices []
@@ -239,7 +231,8 @@
       (swap! graph-view assoc :path-queue (:path path-solution)))
 
     (catch js/Error e
-      (js/alert (str e)))))
+      (js/alert (str e));; TODO: Se podría hacer algo mejor que un alert
+      )))
 
 
 (defn home-page []
