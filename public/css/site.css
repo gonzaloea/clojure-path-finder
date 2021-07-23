@@ -66,6 +66,7 @@ h1.title {
 .start:hover {
     background-color: #65b491;
     box-shadow: 0 0px 15px 0 rgba(0,0,0,0.24), 0 5px 50px 0 rgba(0,0,0,0.19);
+    cursor: pointer;
 }
 
 .reset {
@@ -81,6 +82,7 @@ h1.title {
 .reset:hover {
     background-color: #f17a7a;
     box-shadow: 0 0px 15px 0 rgba(0,0,0,0.24), 0 5px 50px 0 rgba(0,0,0,0.19);
+    cursor: pointer;
 }
 
 
@@ -115,10 +117,11 @@ h1.title {
 .algorithm-selection:hover{
     background-color: #65b491;
     box-shadow: 0 0px 15px 0 rgba(0,0,0,0.24), 0 5px 50px 0 rgba(0,0,0,0.19);
+    cursor: pointer;
 }
 
 
-.command-explanation{
+.command-explanation {
     display:flex;
     margin-left: 50px;
     border-radius:6px;

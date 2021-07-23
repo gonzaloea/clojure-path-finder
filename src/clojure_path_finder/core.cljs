@@ -77,30 +77,30 @@
           size (* (:size @graph-view) (:scale @graph-view))]
       ;;Si el puntero esta en el casillero, muestro el borde grueso, sino normal.
       (if (mouse-in-rect? js/mouseX js/mouseY x y (/ size 2))
-        (js/strokeWeight 2)
+        [(js/strokeWeight 2)
+         (js/cursor js/HAND)]
         (js/strokeWeight 1))
-
+      (js/fill "#ffffff")
       ;;Si el puntero esta en el casillero y el mouseClick esta activo, pinto el fondo.
-      (if  (not (s/has-adjacents (:model @graph-view) node))
-        (js/fill "#767c79")
-        (js/fill "#ffffff"))
-
       (when (get (:visited @graph-view) node)
         (js/fill "#57a1e6"))
 
       (when (get (:path @graph-view) node)
-         (js/fill "#cfc627"))
-      
+        (js/fill "#cfc627"))
+
+      (when (not (s/has-adjacents (:model @graph-view) node))
+        (js/fill "#767c79"))
+
       (when (= (:source @graph-view) node)
         (js/fill "#2163e8"))
 
       (when (= (:destination @graph-view) node)
         (js/fill "#f81919"))
-      
+
       ;;Dibujo el rectangulo del casillero
-      (js/rect (- x (/ size 2)) 
-               (- y (/ size 2)) 
-               size 
+      (js/rect (- x (/ size 2))
+               (- y (/ size 2))
+               size
                size)
 
       (when (= (:source @graph-view) node)
@@ -134,6 +134,7 @@
   (js/stroke "#000000")
   (js/strokeWeight 1)
   (js/background "#ffffff")
+  (js/cursor js/ARROW)
   (graph-view-draw-edges)
   (graph-view-draw-vertices)
 )
@@ -142,21 +143,24 @@
   (doseq [node (graph-view-get-vertices)]
     (let [x (* (:x node) (:size @graph-view))
           y (* (:y node) (:size @graph-view))
-          is-start (= (:source @graph-view) node)
-          is-end (= (:destination @graph-view) node)
+          is-start? (= (:source @graph-view) node)
+          is-end? (= (:destination @graph-view) node)
           has-adjacents (s/has-adjacents (:model @graph-view) node)
           size (* (:size @graph-view) (:scale @graph-view))
-          shift-pressed? (= 16 (when (js/keyIsDown 16) js/keyCode))
-          ctrl-pressed? (= 17 (when (js/keyIsDown 17) js/keyCode))]
+          is-shift-pressed? (js/keyIsDown js/SHIFT)
+          is-ctrl-pressed?  (js/keyIsDown js/CONTROL)]
 
       (when (mouse-in-rect? js/mouseX js/mouseY x y (/ size 2))
-        [(when (and (not is-start) (not is-end) (not shift-pressed?) (not ctrl-pressed?))
+        [(when (and (not is-start?) 
+                    (not is-end?) 
+                    (not is-shift-pressed?) 
+                    (not is-ctrl-pressed?))
            (if has-adjacents
              (swap! graph-view assoc :model (s/hide-vertex (:model @graph-view) node))
              (swap! graph-view assoc :model (s/unhide-vertex (:model @graph-view) node))))
-         (when (and has-adjacents shift-pressed? (not is-end))
+         (when (and has-adjacents is-shift-pressed? (not is-end?))
            (swap! graph-view assoc :source node))
-         (when (and has-adjacents ctrl-pressed? (not is-start))
+         (when (and has-adjacents is-ctrl-pressed? (not is-start?))
            (swap! graph-view assoc :destination node))]))))
 
 

@@ -88,30 +88,72 @@
   (reduce table-edges edgeless-graph (keys (:data edgeless-graph))))
 
 
+;; (defn bfs
+;;   [graph source destination]
+;;   (loop [paths   #queue []
+;;          visited [source]
+;;          s       [source]]
+
+;;     (let [neighbors   (into [] (filter (fn [v] (not (some #(= % v) visited)))
+;;                                        (get-adjacents graph (last s))))
+
+;;           new-paths   (into #queue []
+;;                             (concat paths (into #queue [] (concat (map (fn [n] (into [] (conj s n)))
+;;                                                                        neighbors)))))
+;;           actual-path (into [] (peek new-paths))]
+
+;;       (js/console.log "paths: " (str paths))
+;;       (js/console.log "s: " (str s))
+;;       (js/console.log "visited: " (str visited))
+
+;;       (if (= (last actual-path) destination)
+;;         {:path actual-path :visited visited}
+;;         (recur
+;;          (pop new-paths)
+;;          (into []
+;;                (if (some #(= % (last actual-path)) visited)
+;;                  visited
+;;                  (concat visited [(last actual-path)])))
+;;          actual-path)))))
+
+(defn build-path 
+  [parents source destination]
+  (loop [path    [destination]
+         current destination]
+   (if (or (= current source) (nil? current))
+     (reverse path)
+     (do
+       (let [prev    (get parents current)
+             path    (conj path prev)
+             current prev]
+         (recur 
+          path
+          current)))) 
+   
+   ))
+
 (defn bfs
   [graph source destination]
-  (loop [paths   #queue []
-         visited [source]
-         s       [source]]
-
-    (let [neighbors   (into [] (filter (fn [v] (not (some #(= % v) visited)))
-                        (get-adjacents graph (last s))))
-
-          new-paths   (into #queue [] 
-                        (concat paths (into #queue [] (concat (map (fn [n] (into [] (conj s n))) 
-                                                                  neighbors)))))
-          actual-path (into [] (peek new-paths))]
-
-      (js/console.log "last: " (str actual-path))
-
-      (if (= (last actual-path) destination)
-        {:path actual-path :visited visited}
-        (recur
-         (pop new-paths)
-         (into [] 
-          (if (some #(= % (last actual-path)) visited) 
-            visited 
-            (concat visited [(last actual-path)]))) actual-path)))))
+  (loop [queue        #queue []
+         visited      [source]   ;; Para poder mostrar en orden
+         visited-set  #{source}
+         current      source
+         path         {source nil}]
+    (if (= current destination)
+      {:path (build-path path source destination) :visited visited}
+      (do
+        (let [neighbors     (get-adjacents graph current)
+              new-neighbors (filter #(not (contains? visited-set %)) neighbors)
+              queue         (reduce conj (pop queue) new-neighbors)
+              visited       (reduce conj visited new-neighbors)
+              visited-set   (reduce conj visited-set new-neighbors)
+              path          (into path (map (fn [w] [w current]) new-neighbors))]
+          (recur
+           queue
+           visited
+           visited-set
+           (peek queue)
+           path))))))
 
 
 (defn- abs-dfs
@@ -122,8 +164,9 @@
     (let [neighbors   (into [] (filter (fn [v] (not (some #(= % v) visited))) (get-adjacents graph (last s))))
           new-paths   (into [] (concat paths (into [] (concat (map (fn [n] (into [] (conj s n))) (shuffle-fn neighbors))))))
           actual-path (into [] (last new-paths))]
+      (js/console.log (str new-paths))
       (if (= (last actual-path) destination)
-        {:path    actual-path 
+        {:path    actual-path
          :visited (into [] (if (some #(= % (last actual-path)) visited) visited (concat visited [(last actual-path)])))}
         (recur
          (pop new-paths)

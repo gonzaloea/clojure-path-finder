@@ -14,7 +14,7 @@
            (swap! state assoc :algorithm (get algorithms selected-algorithm)))])}
     
     (for [algorithm (keys algorithms)]
-      [:option {:value algorithm} algorithm])]
+      [:option {:key algorithm :value algorithm} algorithm])]
     ]
    
    [:button.start {:on-click start-action } 
@@ -22,6 +22,7 @@
    
    [:button.reset {:on-click reset-action }
        "↺ Reniciar"]
+   
    [:div.command-explanation
     [:div.command
      "LClick"]
