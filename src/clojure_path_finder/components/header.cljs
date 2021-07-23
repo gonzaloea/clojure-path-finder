@@ -1,6 +1,6 @@
 (ns clojure-path-finder.components.header)
 
-(defn header-component [start-action reset-action state algorithms]
+(defn header-component [start-action reset-action read-action download-map-action state algorithms]
   [:div.header 
    [:h1.title "Clojure Path Finder"]
    [:div.algorithm-selection-container
@@ -17,11 +17,26 @@
       [:option {:key algorithm :value algorithm} algorithm])]
     ]
    
-   [:button.start {:on-click start-action } 
+   [:button.start.button {:on-click start-action } 
     "► Iniciar"]
    
-   [:button.reset {:on-click reset-action }
+   [:button.reset.button {:on-click reset-action }
        "↺ Reniciar"]
+   
+   [:label#upload-map-lbl.button.start 
+    {:for "upload-map" 
+     :role "img" 
+     :aria-label "Subir un mapa"} "⭱"]
+   
+   [:input#upload-map 
+    {:type "file" 
+     :accept ".json"
+     :on-change read-action } ]
+   
+   [:button#export-map.start.button
+    {:role "img"
+     :aria-label "Exportar mapa"
+     :on-click download-map-action} "⤓"]
    
    [:div.command-explanation
     [:div.command

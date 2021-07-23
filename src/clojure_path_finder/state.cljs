@@ -30,21 +30,11 @@
   (seq (get-adjacents self vertex)))
 
 
-(defn hide-vertex [self vertex]
-  (let [adjacents (get-adjacents self vertex)
-        new-data (assoc (dissoc (:data self) vertex) vertex [])]
-    (create-graph (reduce (fn [g a] (let [new-adjacents (set (filter (fn [b]
-                                                                       (not= b vertex))
-                                                                     (get g a #{})))]
-                                      (assoc (dissoc g a)
-                                             a new-adjacents))) new-data adjacents))))
-
-
 
 (defn add-edge [self u v]
   (let [one-way-graph (add-adjacent self u v)]
-    ;; (add-adjacent one-way-graph v u)))
-    one-way-graph))
+    (add-adjacent one-way-graph v u)))
+    ;; one-way-graph))
 
 (defn table-edges [self vertex]
   (let [x (:x vertex)
@@ -54,7 +44,8 @@
         bottom-vertex (new-vertex x (+ y 1))
         top-vertex (new-vertex x (- y 1))]
     (reduce (fn [g [u v]] (add-edge g u v)) self (filter
-                                                  (fn [[u v]] (contains? (:data self) v))
+                                                  (fn [[u v]] (and (contains? (:data self) u)
+                                                                   (contains? (:data self) v)))
                                                   [[vertex right-vertex]
                                                    [vertex bottom-vertex]
                                                    [vertex left-vertex]
@@ -73,9 +64,29 @@
                                                    [vertex bottom-vertex]
                                                    [vertex left-vertex]
                                                    [vertex top-vertex]]))))
+(defn hide-vertex [self vertex]
+  (let [adjacents (get-adjacents self vertex)
+        new-data (assoc (dissoc (:data self) vertex) vertex [])]
+    (create-graph
+     (reduce (fn [g a]
+               (let
+                [new-adjacents (set (filter #(not= % vertex) (get g a #{})))]
+                 (assoc (dissoc g a) a new-adjacents)))
+             new-data adjacents))))
 
 (defn unhide-vertex [self vertex]
   (table-edges-avoid-empty self vertex))
+
+(defn create-table-graph
+  [width height]
+  (let [edgeless-graph
+        (reduce add-vertex
+                (create-graph)
+                (into []
+                      (for [x (range 1 width) y (range 1 height)]
+                        (new-vertex x y))))]
+    (reduce table-edges edgeless-graph (keys (:data edgeless-graph)))))
+
 
 (def edgeless-graph
   (reduce add-vertex
@@ -84,8 +95,7 @@
                 (for [x (range 1 24) y (range 1 11)]
                   (new-vertex x y)))))
 
-(def table-graph
-  (reduce table-edges edgeless-graph (keys (:data edgeless-graph))))
+(def table-graph (create-table-graph 24 11))
 
 
 ;; (defn bfs
@@ -116,43 +126,46 @@
 ;;                  (concat visited [(last actual-path)])))
 ;;          actual-path)))))
 
-(defn build-path 
+(defn build-path
   [parents source destination]
   (loop [path    [destination]
          current destination]
-   (if (or (= current source) (nil? current))
-     (reverse path)
-     (do
-       (let [prev    (get parents current)
-             path    (conj path prev)
-             current prev]
-         (recur 
-          path
-          current)))) 
-   
-   ))
+    (if (or (= current source) (nil? current))
+      (reverse path)
+      (do
+        (let [prev    (get parents current)
+              path    (conj path prev)
+              current prev]
+          (recur
+           path
+           current))))))
 
 (defn bfs
   [graph source destination]
-  (loop [queue        #queue []
-         visited      [source]   ;; Para poder mostrar en orden
-         visited-set  #{source}
-         current      source
+  (loop [queue        #queue [source]
+         visited      []   ;; Para poder mostrar en orden
+         visited-set  #{}
          path         {source nil}]
-    (if (= current destination)
-      {:path (build-path path source destination) :visited visited}
-      (do
-        (let [neighbors     (get-adjacents graph current)
-              new-neighbors (filter #(not (contains? visited-set %)) neighbors)
-              queue         (reduce conj (pop queue) new-neighbors)
-              visited       (reduce conj visited new-neighbors)
-              visited-set   (reduce conj visited-set new-neighbors)
-              path          (into path (map (fn [w] [w current]) new-neighbors))]
+    (js/console.log "queue" (str queue))
+    (when (empty? queue)
+      (throw (js/Error "El mapa no tiene solución")))
+    (js/console.log "asd")
+
+
+    (do
+      (let [current       (peek queue)
+            neighbors     (get-adjacents graph current)
+            new-neighbors (filter #(not (contains? visited-set %)) neighbors)
+            queue         (reduce conj (pop queue) new-neighbors)
+            visited       (reduce conj visited new-neighbors)
+            visited-set   (reduce conj visited-set new-neighbors)
+            path          (into path (map (fn [w] [w current]) new-neighbors))]
+        (if (= current destination)
+          {:path (build-path path source destination) :visited visited}
           (recur
            queue
            visited
            visited-set
-           (peek queue)
            path))))))
 
 
@@ -164,10 +177,13 @@
     (let [neighbors   (into [] (filter (fn [v] (not (some #(= % v) visited))) (get-adjacents graph (last s))))
           new-paths   (into [] (concat paths (into [] (concat (map (fn [n] (into [] (conj s n))) (shuffle-fn neighbors))))))
           actual-path (into [] (last new-paths))]
-      (js/console.log (str new-paths))
-      (if (= (last actual-path) destination)
+      ;; (js/console.log (str new-paths))
+      (cond
+        (= (last actual-path) destination)
         {:path    actual-path
          :visited (into [] (if (some #(= % (last actual-path)) visited) visited (concat visited [(last actual-path)])))}
+        (empty? new-paths) (throw (js/Error "El mapa no tiene solución"))
+        :else
         (recur
          (pop new-paths)
          (into [] (if (some #(= % (last actual-path)) visited) visited (concat visited [(last actual-path)])))
